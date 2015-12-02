@@ -19,7 +19,7 @@ public class Main extends Application {
 
     static final int WIDTH = 800;
     static final int HEIGHT = 600;
-    static final int ANT_COUNT = 100;
+    static final int ANT_COUNT = 250;
 
     ArrayList<Ant> ants;
     long lastTimeStamp = 0;
@@ -36,9 +36,23 @@ public class Main extends Application {
     void drawAnts(GraphicsContext context) {
         context.clearRect(0, 0, WIDTH, HEIGHT);
         for (Ant ant : ants) {
-            context.setFill(Color.BLACK);
-            context.fillOval(ant.x, ant.y, 5, 5);
+            context.setFill(ant.color);
+            context.fillOval(ant.x, ant.y, 10, 10);
         }
+    }
+
+    Ant aggravateAnt(Ant ant) {
+        ArrayList<Ant> aggAnt = ants.parallelStream()
+                .filter(ant2 -> {
+                    return (Math.abs(ant2.x - ant.x) <= 10 && Math.abs(ant2.y - ant.y) <= 10);
+                    })
+                .collect(Collectors.toCollection(ArrayList::new));
+        if (aggAnt.size() > 1) {
+            ant.color = Color.RED;
+        } else {
+            ant.color = Color.BLACK;
+        }
+        return ant;
     }
 
     double randomStep() {
@@ -58,6 +72,7 @@ public class Main extends Application {
 
     void updateAnts() {
         ants = ants.parallelStream()
+                .map(this::aggravateAnt)
                 .map(this::moveAnt)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
@@ -93,7 +108,6 @@ public class Main extends Application {
         };
         timer.start();
     }
-
 
     public static void main(String[] args) {
         launch(args);
